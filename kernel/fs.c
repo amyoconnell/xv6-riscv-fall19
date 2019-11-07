@@ -411,8 +411,26 @@ bmap(struct inode *ip, uint bn)
     brelse(bp);
     return addr;
   }
- // bn -= NDINDIRECT
- // if(bn < NDINDIRECT) { }
+  bn -= NDINDIRECT;
+  if(bn < NDINDIRECT) {
+      if((addr = ip->addrs[NINDIRECT]) == 0)
+         ip->addrs[NINDIRECT] = addr = balloc(ip->dev);
+
+       bp = bread(ip->dev, addr); // read the indirect block
+       // Read a block number from the right position within the block
+       a = (uint*)bp->data;
+       // index into this indirect block?
+	// figure out what chunk of a our bn is in (1-256)
+       uint a_idx = (bn - NDIRECT - NINDIRECT) % 256;
+       if((addr = a[a_idx]) == 0) {
+	   a[a_idx] = addr = balloc(ip->dev);
+	   log_write(bp);
+       }
+       // Need to index into second indirect layer
+//      brelse(bp);
+      return addr;
+   }
+
   panic("bmap: out of range");
 }
 
