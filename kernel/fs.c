@@ -373,8 +373,10 @@ iunlockput(struct inode *ip)
 // are listed in ip->addrs[].  The next NINDIRECT blocks are
 // listed in block ip->addrs[NDIRECT].
 
-// Return the disk block address of the nth block in inode ip.
+// Return the disk block address of the bn'th block in inode ip.
 // If there is no such block, bmap allocates one.
+//
+// bn = block number
 static uint
 bmap(struct inode *ip, uint bn)
 {
@@ -382,7 +384,9 @@ bmap(struct inode *ip, uint bn)
   struct buf *bp;
 
   if(bn < NDIRECT){
+    // Check if ip does not have a bn'th data block allocated
     if((addr = ip->addrs[bn]) == 0)
+      // balloc: allocates a new disk block
       ip->addrs[bn] = addr = balloc(ip->dev);
     return addr;
   }
@@ -392,12 +396,18 @@ bmap(struct inode *ip, uint bn)
     // Load indirect block, allocating if necessary.
     if((addr = ip->addrs[NDIRECT]) == 0)
       ip->addrs[NDIRECT] = addr = balloc(ip->dev);
-    bp = bread(ip->dev, addr);
+    // bread: obtains a buf containing a copy of a block which can be read or motified in memory
+    //        returns a locked buffer
+    bp = bread(ip->dev, addr); // read the indirect block
+    // Read a block number from the right position within the block
     a = (uint*)bp->data;
+    // Check if ip does not have a bn'th data block allocated
     if((addr = a[bn]) == 0){
+      // balloc: allocates a new disk block
       a[bn] = addr = balloc(ip->dev);
       log_write(bp);
     }
+    // brelse: release the locked buffer
     brelse(bp);
     return addr;
   }
