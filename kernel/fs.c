@@ -412,7 +412,7 @@ bmap(struct inode *ip, uint bn)
     brelse(bp);
     return addr;
   }
-  bn -= NDINDIRECT;
+  bn -= NINDIRECT;
   if(bn < NDINDIRECT) {
       if((addr = ip->addrs[NINDIRECT]) == 0)
          ip->addrs[NINDIRECT] = addr = balloc(ip->dev);
@@ -422,7 +422,7 @@ bmap(struct inode *ip, uint bn)
        a = (uint*)bp->data;
        // index into this indirect block?
 	// figure out what chunk of a our bn is in (1-256)
-       uint a_idx = (bn - NDIRECT - NINDIRECT) % 256;
+       uint a_idx = bn  % 256;
        if((addr = a[a_idx]) == 0) {
 	   a[a_idx] = addr = balloc(ip->dev);
 	   log_write(bp);
