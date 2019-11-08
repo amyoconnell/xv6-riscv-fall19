@@ -414,8 +414,8 @@ bmap(struct inode *ip, uint bn)
   }
   bn -= NINDIRECT;
   if(bn < NDINDIRECT) {
-      if((addr = ip->addrs[NINDIRECT]) == 0)
-         ip->addrs[NINDIRECT] = addr = balloc(ip->dev);
+      if((addr = ip->addrs[NDIRECT+1]) == 0)
+         ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
 
        bp = bread(ip->dev, addr); // read the indirect block
        // Read a block number from the right position within the block
