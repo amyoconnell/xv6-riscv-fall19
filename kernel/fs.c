@@ -377,6 +377,7 @@ iunlockput(struct inode *ip)
 // If there is no such block, bmap allocates one.
 //
 // bn = block number
+// up to (NDIRECT + NINDIRECT + NDINDIRECT) aka MAX_FILE
 static uint
 bmap(struct inode *ip, uint bn)
 {
