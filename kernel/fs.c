@@ -454,9 +454,10 @@ bmap(struct inode *ip, uint bn)
 static void
 itrunc(struct inode *ip)
 {
-  int i, j;
+  int i, j, k;
   struct buf *bp;
-  uint *a;
+  struct buf *bp2;
+  uint *a, *a2;
 
   for(i = 0; i < NDIRECT; i++){
     if(ip->addrs[i]){
@@ -466,15 +467,48 @@ itrunc(struct inode *ip)
   }
 
   if(ip->addrs[NDIRECT]){
+    // Read the indirect block
     bp = bread(ip->dev, ip->addrs[NDIRECT]);
+    // Get the data
     a = (uint*)bp->data;
+    // Loop over all indexes in the indirect block
     for(j = 0; j < NINDIRECT; j++){
+      // If value at the index isn't null, free the block
       if(a[j])
         bfree(ip->dev, a[j]);
     }
     brelse(bp);
     bfree(ip->dev, ip->addrs[NDIRECT]);
     ip->addrs[NDIRECT] = 0;
+  }
+
+  // Free doubly indirect
+  if(ip->addrs[NDIRECT+1]){
+    bp = bread(ip->dev, ip->addrs[NDIRECT+1]);
+    // Get data from doubly indirect block (i.e., addresses to indirect blocks)
+    a = (uint*)bp->data;
+    // Loop over indexes of doubly indirect block
+    for(j = 0; j < NINDIRECT; j++){
+      if(a[j]) {
+
+        // Read the indirect block
+        bp2 = bread(ip->dev, a[j]);
+        a2 = (uint*)bp2->data;
+
+        // Loop over indexes of indirect block at index j
+        for(k = 0; k < NDINDIRECT; k++)
+          // Get the data from the indirect block (i.e., blocks)
+          if(a2[k])
+            bfree(ip->dev, a[k]);
+        brelse(bp2);
+        bfree(ip->dev, a[j]);
+      }
+
+    }
+    brelse(bp);
+    bfree(ip->dev, ip->addrs[NDIRECT+1]);
+    ip->addrs[NDIRECT+1] = 0;
+
   }
 
   ip->size = 0;
