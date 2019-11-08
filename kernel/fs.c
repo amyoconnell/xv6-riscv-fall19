@@ -414,21 +414,30 @@ bmap(struct inode *ip, uint bn)
   }
   bn -= NINDIRECT;
   if(bn < NDINDIRECT) {
-      if((addr = ip->addrs[NDIRECT+1]) == 0)
-         ip->addrs[NDIRECT+1] = addr = balloc(ip->dev);
+      if((addr = ip->addrs[NDIRECT + 1]) == 0)
+         ip->addrs[DIRECT + 1] = addr = balloc(ip->dev);
 
        bp = bread(ip->dev, addr); // read the indirect block
        // Read a block number from the right position within the block
        a = (uint*)bp->data;
-       // index into this indirect block?
-	// figure out what chunk of a our bn is in (1-256)
-       uint a_idx = bn  % 256;
-       if((addr = a[a_idx]) == 0) {
-	   a[a_idx] = addr = balloc(ip->dev);
-	   log_write(bp);
-       }
-       // Need to index into second indirect layer
-//      brelse(bp);
+      // index into this indirect block?
+	    // figure out what chunk of a our bn is in (1-256)
+      uint a_idx = bn / 256;
+      if((addr = a[a_idx]) == 0) {
+	      a[a_idx] = addr = balloc(ip->dev);
+        log_write(bp);
+      }
+      // Find offset into second indirect block
+      uint offset = bn % 256;
+      bp = bread(ip->dev, addr); // read the indirect block
+      a = (uint*)bp->data;
+      if((addr = a[offset]) == 0){
+          // balloc: allocates a new disk block
+          a[offset] = addr = balloc(ip->dev);
+          log_write(bp);
+      }
+
+      brelse(bp);
       return addr;
    }
 
