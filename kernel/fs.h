@@ -26,9 +26,10 @@ struct superblock {
 
 #define NDIRECT 11
 #define NINDIRECT (BSIZE / sizeof(uint))
+// NDINDIRECT represents the double indirect block 256 * 256
+#define NDINDIRECT ((BSIZE / sizeof(uint)) * (BSIZE / sizeof(uint)))
 #define MAXFILE (NDIRECT + NINDIRECT + NDINDIRECT)
-// NDINDIRECT represents the double indirect block 256 * 256  
-#define NDINDIRECT ((BSIZE * BSIZE) / sizeof(uint))
+
 
 // On-disk inode structure
 struct dinode {
