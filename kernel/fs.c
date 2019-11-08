@@ -427,6 +427,8 @@ bmap(struct inode *ip, uint bn)
 	      a[a_idx] = addr = balloc(ip->dev);
         log_write(bp);
       }
+
+      brelse(bp);
       // Find offset into second indirect block
       uint offset = bn % 256;
       bp = bread(ip->dev, addr); // read the indirect block
