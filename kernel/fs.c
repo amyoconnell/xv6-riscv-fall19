@@ -496,14 +496,14 @@ itrunc(struct inode *ip)
         a2 = (uint*)bp2->data;
 
         // Loop over indexes of indirect block at index j
-        for(k = 0; k < NDINDIRECT; k++)
+        for(k = 0; k < NDINDIRECT; k++){  
           // Get the data from the indirect block (i.e., blocks)
           if(a2[k])
             bfree(ip->dev, a[k]);
-        brelse(bp2);
-        bfree(ip->dev, a[j]);
+        }
+       brelse(bp2);
+       bfree(ip->dev, a[j]);
       }
-
     }
     brelse(bp);
     bfree(ip->dev, ip->addrs[NDIRECT+1]);
