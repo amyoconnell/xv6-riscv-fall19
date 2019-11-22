@@ -260,16 +260,28 @@ virtio_disk_rw(int n, struct buf *b, int write)
   release(&disk[n].vdisk_lock);
 }
 
+//intr = interrupt
 void
 virtio_disk_intr(int n)
 {
   acquire(&disk[n].vdisk_lock);
 
+  //disk[n]= the nth disk in the array of disk structs
+  //what's a disk struct
+  //NUM = number of virtio descriptors
+  //used_idx = we've looked this far in used[2..NUM]
+  //used->id = UsedArea ->id (not sure what this is)
   while((disk[n].used_idx % NUM) != (disk[n].used->id % NUM)){
     int id = disk[n].used->elems[disk[n].used_idx].id;
-
-    if(disk[n].info[id].status != 0)
+    //id<8
+    // if status isn't 0 -> panic
+    if(disk[n].info[id].status != 0){
+      printf("id: %d\n", id);
+      printf("used_idx: %d\n", disk[n].used_idx);
+      printf("status: %d\n", disk[n].info[id].status);
       panic("virtio_disk_intr status");
+    }
+      
     
     disk[n].info[id].b->disk = 0;   // disk is done with buf
     wakeup(disk[n].info[id].b);
