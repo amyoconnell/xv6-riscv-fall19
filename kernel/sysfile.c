@@ -482,8 +482,17 @@ sys_pipe(void)
   }
   return 0;
 }
+
+// This is where we define how symlink functions
 uint64
 sys_symlink(void) {
-    return 1;
+
+  // Implement the symlink(target, path) system call to create a new symbolic link 
+  // at path that refers to target. Note that target does not need to exist for 
+  // the system call to succeed. You will need to choose somewhere to store the 
+  // target path of a symbolic link, for example, in the inode's data blocks.
+
+
+  return -1;
 }
 

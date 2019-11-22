@@ -144,6 +144,7 @@ UPROGS=\
 	$U/_alloctest\
 	$U/_bigfile\
 	$U/_symlinktest\
+	$U/_symlink\
 
 fs.img: mkfs/mkfs README user/xargstest.sh $(UPROGS)
 	mkfs/mkfs fs.img README user/xargstest.sh $(UPROGS)
