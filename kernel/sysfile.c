@@ -491,8 +491,24 @@ sys_symlink(void) {
   // at path that refers to target. Note that target does not need to exist for 
   // the system call to succeed. You will need to choose somewhere to store the 
   // target path of a symbolic link, for example, in the inode's data blocks.
+  char target[MAXPATH];
+  char path[MAXPATH];
+  // struct inode *inode_path;//, *inode_target;
+  struct inode *ip;
 
+  begin_op(ROOTDEV);
+  if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0 || (ip = create(path, T_SYMLINK, 0, 0)) == 0){
+    end_op(ROOTDEV);
+    return -1;
+  }
+  // want to store target in inode for path
 
-  return -1;
+  
+  // inode_target = namei(target);
+
+  iunlockput(ip);
+  end_op(ROOTDEV);
+  return 0;
+  
 }
 
