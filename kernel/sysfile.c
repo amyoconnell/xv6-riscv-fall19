@@ -317,6 +317,36 @@ sys_open(void)
     }
   }
 
+  if (ip->type == T_SYMLINK) {
+    printf("this is a symlink\n");
+    struct buf *bp;
+    bp = bread(ip->dev, 0); // read the block
+    char *target = (char *) bp->data;
+    // traverse target
+    // Given an absolute path
+    int i;
+    int len = strlen(target);
+    char dirname[MAXPATH];
+    for (i = len-1; i >= 0; i--) {
+      if (target[i] == '/' && i != len){ // make sure to exclude trailing slashes
+        break;
+      }
+    }
+
+    if (i > 0) {
+      strncpy(dirname, target, i);
+    } else {
+      strncpy(dirname, target, MAXPATH);
+    }
+    char * cur_dir = ip->cwd;
+    chdir(); // want to change to directory of target (only if argument to 
+            // command is a file)
+
+    printf("dirname: %s\n", dirname);
+    brelse(bp);
+    chdir(cur_dir);
+  }
+
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
     iunlockput(ip);
     end_op(ROOTDEV);
