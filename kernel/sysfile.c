@@ -3,7 +3,6 @@
 // Mostly argument checking, since we don't trust
 // user code, and calls into file.c and fs.c.
 //
-
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
@@ -15,6 +14,8 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+#include "buf.h"
+// #include <string.h>
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -483,6 +484,7 @@ sys_pipe(void)
   return 0;
 }
 
+
 // This is where we define how symlink functions
 uint64
 sys_symlink(void) {
@@ -502,9 +504,29 @@ sys_symlink(void) {
     return -1;
   }
   // want to store target in inode for path
+  // Symlink data block holds a pointer to the target
+  // store (full path) + path in data blocks
+  // should we have an inode?
 
-  
   // inode_target = namei(target);
+
+  // int fd = open(path, O_WRONLY);
+  // write(fd, target, MAXPATH);
+  // close(fd);
+
+  // struct inode *cwd_inode = idup(myproc()->cwd); // this will give us inode of path to cwd (i.e., containing symlink not target)
+  struct buf *bp;
+  bp = bread(ip->dev, 0); // read the block
+  // bp->data = target;
+  memmove(bp->data, target, sizeof(target)); 
+  printf("bp data: %s\n", bp->data);
+  //modify bp
+  bwrite(bp);
+  brelse(bp);
+    // Read a block number from the right position within the block
+  // a = (uint*)bp->data;
+
+  // store relative path in data blocks of ip
 
   iunlockput(ip);
   end_op(ROOTDEV);
