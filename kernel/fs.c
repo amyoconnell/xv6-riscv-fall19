@@ -499,7 +499,7 @@ itrunc(struct inode *ip)
         for(k = 0; k < NINDIRECT; k++){ // change NDINDIRECT to NINDIRECT 
           // Get the data from the indirect block (i.e., blocks)
           if(a2[k]) {
-	    //k++; // change: increment k 
+	    k++; // change: increment k 
             bfree(ip->dev, a2[k]); // change a[k] to a2[k]
 	  }
         }

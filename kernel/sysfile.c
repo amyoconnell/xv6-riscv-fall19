@@ -390,7 +390,7 @@ sys_chdir(void)
   char path[MAXPATH];
   struct inode *ip;
   struct proc *p = myproc();
-  
+
   begin_op(ROOTDEV);
   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
     end_op(ROOTDEV);
@@ -487,12 +487,14 @@ sys_pipe(void)
 uint64
 sys_symlink(void) {
 
-  // Implement the symlink(target, path) system call to create a new symbolic link 
-  // at path that refers to target. Note that target does not need to exist for 
-  // the system call to succeed. You will need to choose somewhere to store the 
+  // Implement the symlink(target, path) system call to create a new symbolic link
+  // at path that refers to target. Note that target does not need to exist for
+  // the system call to succeed. You will need to choose somewhere to store the
   // target path of a symbolic link, for example, in the inode's data blocks.
 
+// myproc()->cwd is an inode that contains the string of the cwd so we need to
+// read the string and grab it
+// 1. how to read a file?
 
   return -1;
 }
-
