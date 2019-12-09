@@ -4,12 +4,6 @@
 #include "kernel/fcntl.h"
 #include "kernel/fs.h"
 
-struct symlink {
-    char* target; // Existing file path 
-    char* path; // Path to point to target
-
-};
-
 int
 main(int argc, char *argv[])
 {
@@ -25,6 +19,4 @@ main(int argc, char *argv[])
     }
     
     exit(0);
-    // problem if target doesn't exist
-    // struct inode* target_inode = namei(target); // should give us inode struct associated with path
 }

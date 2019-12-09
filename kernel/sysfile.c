@@ -3,7 +3,6 @@
 // Mostly argument checking, since we don't trust
 // user code, and calls into file.c and fs.c.
 //
-
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
@@ -15,6 +14,8 @@
 #include "sleeplock.h"
 #include "file.h"
 #include "fcntl.h"
+#include "buf.h"
+// #include <string.h>
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
@@ -316,6 +317,36 @@ sys_open(void)
     }
   }
 
+  if (ip->type == T_SYMLINK) {
+    printf("this is a symlink\n");
+    struct buf *bp;
+    bp = bread(ip->dev, 0); // read the block
+    char *target = (char *) bp->data;
+    // traverse target
+    // Given an absolute path
+    int i;
+    int len = strlen(target);
+    char dirname[MAXPATH];
+    for (i = len-1; i >= 0; i--) {
+      if (target[i] == '/' && i != len){ // make sure to exclude trailing slashes
+        break;
+      }
+    }
+
+    if (i > 0) {
+      strncpy(dirname, target, i);
+    } else {
+      strncpy(dirname, target, MAXPATH);
+    }
+    char * cur_dir = ip->cwd;
+    chdir(); // want to change to directory of target (only if argument to 
+            // command is a file)
+
+    printf("dirname: %s\n", dirname);
+    brelse(bp);
+    chdir(cur_dir);
+  }
+
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
     iunlockput(ip);
     end_op(ROOTDEV);
@@ -483,6 +514,7 @@ sys_pipe(void)
   return 0;
 }
 
+
 // This is where we define how symlink functions
 uint64
 sys_symlink(void) {
@@ -491,10 +523,43 @@ sys_symlink(void) {
   // at path that refers to target. Note that target does not need to exist for
   // the system call to succeed. You will need to choose somewhere to store the
   // target path of a symbolic link, for example, in the inode's data blocks.
+  char target[MAXPATH];
+  char path[MAXPATH];
+  // struct inode *inode_path;//, *inode_target;
+  struct inode *ip;
 
-// myproc()->cwd is an inode that contains the string of the cwd so we need to
-// read the string and grab it
-// 1. how to read a file?
+  begin_op(ROOTDEV);
+  if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0 || (ip = create(path, T_SYMLINK, 0, 0)) == 0){
+    end_op(ROOTDEV);
+    return -1;
+  }
+  // want to store target in inode for path
+  // Symlink data block holds a pointer to the target
+  // store (full path) + path in data blocks
+  // should we have an inode?
 
-  return -1;
+  // inode_target = namei(target);
+
+  // int fd = open(path, O_WRONLY);
+  // write(fd, target, MAXPATH);
+  // close(fd);
+
+  // struct inode *cwd_inode = idup(myproc()->cwd); // this will give us inode of path to cwd (i.e., containing symlink not target)
+  struct buf *bp;
+  bp = bread(ip->dev, 0); // read the block
+  // bp->data = target;
+  memmove(bp->data, target, sizeof(target)); 
+  printf("bp data: %s\n", bp->data);
+  //modify bp
+  bwrite(bp);
+  brelse(bp);
+    // Read a block number from the right position within the block
+  // a = (uint*)bp->data;
+
+  // store relative path in data blocks of ip
+
+  iunlockput(ip);
+  end_op(ROOTDEV);
+  return 0;
+  
 }
