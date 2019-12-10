@@ -317,34 +317,61 @@ sys_open(void)
     }
   }
 
-  if (ip->type == T_SYMLINK) {
-    printf("this is a symlink\n");
+  if (ip->type == T_SYMLINK && !O_NOFOLLOW) {
+    // printf("this is a symlink\n");
     struct buf *bp;
     bp = bread(ip->dev, 0); // read the block
     char *target = (char *) bp->data;
-    // traverse target
-    // Given an absolute path
-    int i;
-    int len = strlen(target);
-    char dirname[MAXPATH];
-    for (i = len-1; i >= 0; i--) {
-      if (target[i] == '/' && i != len){ // make sure to exclude trailing slashes
-        break;
+    // struct inode *sym_ip = ip;
+    // printf("ip type: %s\n", sym_ip->type);
+
+    // // traverse target
+    // // Given an absolute path
+    // int i;
+    // int len = strlen(target);
+    // char dirname[MAXPATH];
+    // for (i = len-1; i >= 0; i--) {
+    //   if (target[i] == '/' && i != len){ // make sure to exclude trailing slashes
+    //     break;
+    //   }
+    // }
+
+    // if (i > 0) {
+    //   strncpy(dirname, target, i);
+    // } else {
+    //   strncpy(dirname, target, MAXPATH);
+    // }
+    // char * cur_dir = ip->cwd;
+    // chdir(); // want to change to directory of target (only if argument to 
+    //         // command is a file)
+
+    // printf("dirname: %s\n", dirname);
+    brelse(bp);
+    iunlock(ip);
+    strncpy(path, target, MAXPATH);
+    if(omode & O_CREATE){
+      ip = create(path, T_FILE, 0, 0);
+      if(ip == 0){
+        end_op(ROOTDEV);
+        return -1;
+      }
+    } else {
+      if((ip = namei(path)) == 0){
+        end_op(ROOTDEV);
+        return -1;
+      }
+      ilock(ip);
+      if(ip->type == T_DIR && omode != O_RDONLY){
+        iunlockput(ip);
+        end_op(ROOTDEV);
+        return -1;
       }
     }
 
-    if (i > 0) {
-      strncpy(dirname, target, i);
-    } else {
-      strncpy(dirname, target, MAXPATH);
-    }
-    char * cur_dir = ip->cwd;
-    chdir(); // want to change to directory of target (only if argument to 
-            // command is a file)
+    
 
-    printf("dirname: %s\n", dirname);
-    brelse(bp);
-    chdir(cur_dir);
+    // printf("here\n");
+    // chdir(cur_dir);
   }
 
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
@@ -549,7 +576,7 @@ sys_symlink(void) {
   bp = bread(ip->dev, 0); // read the block
   // bp->data = target;
   memmove(bp->data, target, sizeof(target)); 
-  printf("bp data: %s\n", bp->data);
+  // printf("bp data: %s\n", bp->data);
   //modify bp
   bwrite(bp);
   brelse(bp);
