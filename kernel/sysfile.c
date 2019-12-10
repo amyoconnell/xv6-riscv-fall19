@@ -338,13 +338,13 @@ sys_open(void)
     } else {
       strncpy(dirname, target, MAXPATH);
     }
-    char * cur_dir = ip->cwd;
-    chdir(); // want to change to directory of target (only if argument to 
+    //char * cur_dir = ip->cwd;
+    //chdir(); // want to change to directory of target (only if argument to
             // command is a file)
 
     printf("dirname: %s\n", dirname);
     brelse(bp);
-    chdir(cur_dir);
+    //chdir(cur_dir);
   }
 
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
@@ -547,8 +547,8 @@ sys_symlink(void) {
   // struct inode *cwd_inode = idup(myproc()->cwd); // this will give us inode of path to cwd (i.e., containing symlink not target)
   struct buf *bp;
   bp = bread(ip->dev, 0); // read the block
-  // bp->data = target;
-  memmove(bp->data, target, sizeof(target)); 
+//https://drive.google.com/drive/folders/12WBf1fzGvlWZjlJPc1pZl4zCRmTQbcLP  // bp->data = target;
+  memmove(bp->data, target, sizeof(target));
   printf("bp data: %s\n", bp->data);
   //modify bp
   bwrite(bp);
@@ -561,5 +561,5 @@ sys_symlink(void) {
   iunlockput(ip);
   end_op(ROOTDEV);
   return 0;
-  
+
 }
